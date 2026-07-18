@@ -50,13 +50,26 @@ with st.sidebar:
 st.title('🤖 Consola Interactiva LOGIA-UDP')
 st.caption("Análisis Operacional: Centro de Distribución Nodo Sur")
 
-# Inicializar cliente de OpenAI de manera segura
+# Inicializar cliente de OpenAI de manera ultra segura extrayendo el string puro
 client = None
-if "OPENAI_API_KEY" in st.secrets and st.secrets["OPENAI_API_KEY"]:
-    api_key_clean = str(st.secrets["OPENAI_API_KEY"]).strip().replace('"', '').replace("'", "")
-    client = OpenAI(api_key=api_key_clean)
-elif os.getenv("OPENAI_API_KEY"):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY").strip())
+try:
+    if "OPENAI_API_KEY" in st.secrets:
+        secret_val = st.secrets["OPENAI_API_KEY"]
+        # Si por error se guardó como un diccionario, extraemos su texto interno
+        if isinstance(secret_val, dict):
+            raw_key = secret_val.get("OPENAI_API_KEY", str(secret_val))
+        else:
+            raw_key = str(secret_val)
+            
+        api_key_clean = raw_key.strip().replace('"', '').replace("'", "")
+        # Validamos que no sea un bloque de texto JSON roto
+        if api_key_clean and not api_key_clean.startswith("{"):
+            client = OpenAI(api_key=api_key_clean)
+            
+    if client is None and os.getenv("OPENAI_API_KEY"):
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY").strip())
+except Exception as e:
+    st.error(f"Error al procesar la API Key de los Secrets: {e}")
 
 # Inicializar el historial de conversación en la sesión si no existe
 if "messages" not in st.session_state:
@@ -120,4 +133,4 @@ try:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 except FileNotFoundError:
-    st.error("⚠️ El archivo 'LOGIA_UDP_Caso_Alumno.xlsx' no se encuentra en el repositorio de GitHub. Por favor, asegúrate de subirlo a la carpeta principal para habilitar la descarga.")
+    st.error("⚠️ El archivo 'LOGIA_UDP_Caso_Alumno.xlsx' no se encuentra en el repositorio de GitHub. Por favor, asegúrate de subirlo a la carpeta principal para habilitar la descarga.")entra en el repositorio de GitHub. Por favor, asegúrate de subirlo a la carpeta principal para habilitar la descarga.")
