@@ -51,8 +51,15 @@ st.title('🤖 Consola Interactiva LOGIA-UDP')
 st.caption("Análisis Operacional: Centro de Distribución Nodo Sur")
 
 # Inicializar cliente de OpenAI (usa los secrets de Streamlit)
+# Inicializar cliente de OpenAI de manera segura
 if "OPENAI_API_KEY" in st.secrets:
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    # Convertimos a string y limpiamos espacios o comillas accidentales
+    api_key_clean = str(st.secrets["OPENAI_API_KEY"]).strip().replace('"', '').replace("'", "")
+    client = OpenAI(api_key=api_key_clean)
+elif os.getenv("OPENAI_API_KEY"):
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY").strip())
+else:
+    client = None
 elif os.getenv("OPENAI_API_KEY"):
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 else:
