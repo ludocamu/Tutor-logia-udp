@@ -125,6 +125,8 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
 st.markdown("---")
 # Código para permitir la descarga real del archivo Excel de la bitácora
 try:
+    st.markdown("---")
+try:
     with open("LOGIA_UDP_Caso_Alumno.xlsx", "rb") as file:
         st.download_button(
             label="📥 Descargar Bitácora de Trabajo (Obligatorio)",
@@ -133,4 +135,4 @@ try:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 except FileNotFoundError:
-    st.error("⚠️ El archivo 'LOGIA_UDP_Caso_Alumno.xlsx' no se encuentra en el repositorio de GitHub. Por favor, asegúrate de subirlo a la carpeta principal para habilitar la descarga.")entra en el repositorio de GitHub. Por favor, asegúrate de subirlo a la carpeta principal para habilitar la descarga.")
+    st.error("⚠️ Falta el archivo LOGIA_UDP_Caso_Alumno.xlsx en GitHub.")
