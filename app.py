@@ -50,20 +50,13 @@ with st.sidebar:
 st.title('🤖 Consola Interactiva LOGIA-UDP')
 st.caption("Análisis Operacional: Centro de Distribución Nodo Sur")
 
-# Inicializar cliente de OpenAI (usa los secrets de Streamlit)
 # Inicializar cliente de OpenAI de manera segura
-if "OPENAI_API_KEY" in st.secrets:
-    # Convertimos a string y limpiamos espacios o comillas accidentales
+client = None
+if "OPENAI_API_KEY" in st.secrets and st.secrets["OPENAI_API_KEY"]:
     api_key_clean = str(st.secrets["OPENAI_API_KEY"]).strip().replace('"', '').replace("'", "")
     client = OpenAI(api_key=api_key_clean)
 elif os.getenv("OPENAI_API_KEY"):
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY").strip())
-else:
-    client = None
-elif os.getenv("OPENAI_API_KEY"):
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-else:
-    client = None
 
 # Inicializar el historial de conversación en la sesión si no existe
 if "messages" not in st.session_state:
@@ -89,7 +82,6 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
                 
-                # Instrucción de sistema para guiar al modelo como tutor LOGIA
                 system_prompt = (
                     "Eres LOGIA-UDP, un tutor inteligente de gestión logística para estudiantes universitarios. "
                     "Tu objetivo es guiar al estudiante a resolver el caso de Andina Logística SpA. "
@@ -103,7 +95,7 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
                 ]
                 
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",  # O el modelo que prefieras usar
+                    model="gpt-4o-mini",
                     messages=messages_for_api,
                     temperature=0.7
                 )
@@ -115,9 +107,10 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
         except Exception as e:
             st.error(f"Error al conectar con el tutor inteligente: {e}")
     else:
-        st.warning("Falta configurar la API Key de OpenAI en los Secrets de Streamlit.")
+        st.warning("⚠️ La API Key de OpenAI no está configurada o es inválida. Por favor, revísala en los Secrets de Streamlit.")
 
 st.markdown("---")
+# Código para permitir la descarga real del archivo Excel de la bitácora
 try:
     with open("LOGIA_UDP_Caso_Alumno.xlsx", "rb") as file:
         st.download_button(
