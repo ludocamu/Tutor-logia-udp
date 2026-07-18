@@ -2,7 +2,7 @@ import streamlit as st
 import os
 from openai import OpenAI
 
-st.set_page_config(page_title='Tutor LOGIA-UDP', layout='compact')
+st.set_page_config(page_title='Tutor LOGIA-UDP', layout='centered')
 
 # Ocultar menús nativos de Streamlit para mejorar la estética en Canvas
 st.markdown("""<style>
