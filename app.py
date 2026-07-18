@@ -5,7 +5,7 @@ from openai import OpenAI
 # 1. Configuración de la página
 st.set_page_config(page_title='Tutor LOGIA-UDP', layout='centered')
 
-# Ocultar menús nativos de Streamlit para mejorar la estética en Canvas
+# Ocultar menús nativos de Streamlit para mejorar la estética
 st.markdown("""<style>
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -55,14 +55,12 @@ client = None
 try:
     if "OPENAI_API_KEY" in st.secrets:
         secret_val = st.secrets["OPENAI_API_KEY"]
-        # Si por error se guardó como un diccionario, extraemos su texto interno
         if isinstance(secret_val, dict):
             raw_key = secret_val.get("OPENAI_API_KEY", str(secret_val))
         else:
             raw_key = str(secret_val)
             
         api_key_clean = raw_key.strip().replace('"', '').replace("'", "")
-        # Validamos que no sea un bloque de texto JSON roto
         if api_key_clean and not api_key_clean.startswith("{"):
             client = OpenAI(api_key=api_key_clean)
             
@@ -122,10 +120,10 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
     else:
         st.warning("⚠️ La API Key de OpenAI no está configurada o es inválida. Por favor, revísala en los Secrets de Streamlit.")
 
+# =========================================================================
+# 📥 SECCIÓN FINAL: DESCARGA DE BITÁCORA
+# =========================================================================
 st.markdown("---")
-# Código para permitir la descarga real del archivo Excel de la bitácora
-try:
-    st.markdown("---")
 try:
     with open("LOGIA_UDP_Caso_Alumno.xlsx", "rb") as file:
         st.download_button(
