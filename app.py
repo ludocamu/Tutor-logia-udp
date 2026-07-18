@@ -111,4 +111,13 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
         st.warning("Falta configurar la API Key de OpenAI en los Secrets de Streamlit.")
 
 st.markdown("---")
-st.button("📥 Descargar Bitácora de Trabajo (Obligatorio)")
+try:
+    with open("LOGIA_UDP_Caso_Alumno.xlsx", "rb") as file:
+        st.download_button(
+            label="📥 Descargar Bitácora de Trabajo (Obligatorio)",
+            data=file,
+            file_name="LOGIA_UDP_Caso_Alumno.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+except FileNotFoundError:
+    st.error("⚠️ El archivo 'LOGIA_UDP_Caso_Alumno.xlsx' no se encuentra en el repositorio de GitHub. Por favor, asegúrate de subirlo a la carpeta principal para habilitar la descarga.")
