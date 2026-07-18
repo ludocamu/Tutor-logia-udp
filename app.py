@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from openai import OpenAI
+import requests
 
 # 1. Configuración de la página
 st.set_page_config(page_title='Tutor LOGIA-UDP', layout='centered')
@@ -47,27 +47,22 @@ with st.sidebar:
 # =========================================================================
 # 🤖 CUERPO PRINCIPAL: CHAT INTERACTIVO CON LOGIA
 # =========================================================================
-st.title('🤖 Consola Interactiva LOGIA-UDP')
+st.title('🤖 Consola Interactive LOGIA-UDP')
 st.caption("Análisis Operacional: Centro de Distribución Nodo Sur")
 
-# Inicializar cliente de OpenAI de manera ultra segura extrayendo el string puro
-client = None
-try:
-    if "OPENAI_API_KEY" in st.secrets:
-        secret_val = st.secrets["OPENAI_API_KEY"]
-        if isinstance(secret_val, dict):
-            raw_key = secret_val.get("OPENAI_API_KEY", str(secret_val))
-        else:
-            raw_key = str(secret_val)
-            
-        api_key_clean = raw_key.strip().replace('"', '').replace("'", "")
-        if api_key_clean and not api_key_clean.startswith("{"):
-            client = OpenAI(api_key=api_key_clean)
-            
-    if client is None and os.getenv("OPENAI_API_KEY"):
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY").strip())
-except Exception as e:
-    st.error(f"Error al procesar la API Key de los Secrets: {e}")
+# Obtener la API Key de los Secrets de manera limpia
+api_key = None
+if "OPENAI_API_KEY" in st.secrets:
+    secret_val = st.secrets["OPENAI_API_KEY"]
+    if isinstance(secret_val, dict):
+        api_key = secret_val.get("OPENAI_API_KEY", "")
+    else:
+        api_key = str(secret_val)
+elif os.getenv("OPENAI_API_KEY"):
+    api_key = os.getenv("OPENAI_API_KEY")
+
+if api_key:
+    api_key = api_key.strip().replace('"', '').replace("'", "")
 
 # Inicializar el historial de conversación en la sesión si no existe
 if "messages" not in st.session_state:
@@ -87,8 +82,8 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
     with st.chat_message("user"):
         st.write(user_input)
         
-    # Llamada a OpenAI para generar la respuesta del tutor LOGIA
-    if client:
+    # Llamada directa a la API usando requests para evitar errores de librerías en Streamlit
+    if api_key:
         try:
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
@@ -101,24 +96,35 @@ if user_input := st.chat_input("Escribe tu respuesta o análisis aquí..."):
                     "Sé cordial, profesional y adopta un rol puramente formativo."
                 )
                 
-                messages_for_api = [{"role": "system", "content": system_prompt}] + [
+                # Construir los mensajes para la API
+                api_messages = [{"role": "system", "content": system_prompt}] + [
                     {"role": m["role"], "content": m["content"]} for m in st.session_state.messages
                 ]
                 
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages_for_api,
-                    temperature=0.7
-                )
+                # Petición HTTP directa a OpenAI
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": "gpt-4o-mini",
+                    "messages": api_messages,
+                    "temperature": 0.7
+                }
                 
-                assistant_response = response.choices[0].message.content
-                message_placeholder.write(assistant_response)
+                response = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
                 
-            st.session_state.messages.append({"role": "assistant", "content": assistant_response})
+                if response.status_code == 200:
+                    assistant_response = response.json()["choices"][0]["message"]["content"]
+                    message_placeholder.write(assistant_response)
+                    st.session_state.messages.append({"role": "assistant", "content": assistant_response})
+                else:
+                    st.error(f"Error de la API de OpenAI (Código {response.status_code}): {response.text}")
+                    
         except Exception as e:
-            st.error(f"Error al conectar con el tutor inteligente: {e}")
+            st.error(f"Error de conexión con el tutor: {e}")
     else:
-        st.warning("⚠️ La API Key de OpenAI no está configurada o es inválida. Por favor, revísala en los Secrets de Streamlit.")
+        st.warning("⚠️ La API Key de OpenAI no está configurada. Por favor, revísala en los Secrets de Streamlit.")
 
 # =========================================================================
 # 📥 SECCIÓN FINAL: DESCARGA DE BITÁCORA
